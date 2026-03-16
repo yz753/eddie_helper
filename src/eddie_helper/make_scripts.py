@@ -57,6 +57,38 @@ def run_stage_script(stageout_dict, script_file_path=None, hold_jid=None, job_na
 
     return
 
+
+def run_stagein_script(stagein_dict, script_file_path=None, hold_jid=None, job_name=None):
+    """
+    makes a stage out script from a stageout_dict of the form
+    {'path/to/file/on/eddie': 'path/to/destination/on/datastore'}
+    Note: let's never stageout to the raw data folder, to avoid risk of deletion
+    """
+
+    hold_script=""
+    if hold_jid is not None:
+        hold_script = f" -hold_jid {hold_jid}"
+    if job_name is None:
+        job_name = "stage"
+
+    name_script = f" -N {job_name}"
+
+    script_text=f"""#!/bin/sh
+#$ -cwd
+#$ -q staging
+#$ -l h_rt=00:29:59{hold_script}{name_script}"""
+
+    if script_file_path is None:
+        script_file_path = f"{job_name}" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".sh"
+
+    for source, dest in stagein_dict.items():
+        script_text = script_text + "\nrsync -r " + str(source) + " " + str(dest)
+
+    save_script(script_text, script_file_path)
+    run_script(script_file_path)
+
+    return
+
 def make_run_python_script(uv_directory, python_arg, venv=None, cores=None, email=None, h_rt=None, h_vmem=None, hold_jid=None, job_name=None, staging=False):
     """
     Makes a python script, which will run
