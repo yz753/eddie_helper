@@ -1,12 +1,12 @@
 from datetime import datetime
 import subprocess
 
-def run_python_script(uv_environment, python_arg, venv=None, cores=None, email=None, h_rt=None, h_vmem=None, hold_jid=None, script_file_path=None, staging=False, job_name=None):
+def run_python_script(uv_environment, python_arg, venv=None, cores=None, email=None, h_rt=None, h_rss=None, hold_jid=None, script_file_path=None, staging=False, job_name=None):
 
     if job_name is None:
         job_name = "run_python"
 
-    script_content = make_run_python_script(uv_environment, python_arg, venv=venv, cores=cores, email=email, h_rt=h_rt, h_vmem=h_vmem, hold_jid=hold_jid, staging=staging, job_name=job_name)
+    script_content = make_run_python_script(uv_environment, python_arg, venv=venv, cores=cores, email=email, h_rt=h_rt, h_rss=h_rss, hold_jid=hold_jid, staging=staging, job_name=job_name)
 
     if script_file_path is None:
         script_file_path = f"{job_name}" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".sh"
@@ -41,16 +41,8 @@ def run_stage_script(stageout_dict, script_file_path=None, hold_jid=None, job_na
     if script_file_path is None:
         script_file_path = f"{job_name}" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".sh"
 
-    stageout = False
-
     for source, dest in stageout_dict.items():
-        script_text = script_text + "\ncp -rn " + str(source) + " " + str(dest)
-
-        if 'datastore' in str(dest):
-            stageout = True
-
-    if stageout:
-        script_text = script_text + f"\nchmod -R 777 {dest}"
+        script_text = script_text + "\nrsync -rv " + str(source) + " " + str(dest)
 
     save_script(script_text, script_file_path)
     run_script(script_file_path)
@@ -89,7 +81,7 @@ def run_stagein_script(stagein_dict, script_file_path=None, hold_jid=None, job_n
 
     return
 
-def make_run_python_script(uv_directory, python_arg, venv=None, cores=None, email=None, h_rt=None, h_vmem=None, hold_jid=None, job_name=None, staging=False):
+def make_run_python_script(uv_directory, python_arg, venv=None, cores=None, email=None, h_rt=None, h_rss=None, hold_jid=None, job_name=None, staging=False):
     """
     Makes a python script, which will run
     >> cd uv_directory
@@ -115,8 +107,8 @@ def make_run_python_script(uv_directory, python_arg, venv=None, cores=None, emai
 
     if h_rt is None:
         h_rt = "47:59:59"
-    if h_vmem is None:
-        h_vmem=19
+    if h_rss is None:
+        h_rss=16
     if job_name is not None:
         name_script = f" -N {job_name}"
     else:
@@ -128,7 +120,7 @@ def make_run_python_script(uv_directory, python_arg, venv=None, cores=None, emai
     else:
         staging_script = ""
         core_script = f" -pe sharedmem {cores}"
-        vmem_script = f",h_vmem={h_vmem}G"
+        vmem_script = f",h_rss={h_rss}G"
 
     script_content = f"""#!/bin/bash
 #$ -cwd{staging_script}{core_script} -l rl9=true{vmem_script},h_rt={h_rt}{hold_script}{email_script}{name_script}
