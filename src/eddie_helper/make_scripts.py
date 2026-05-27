@@ -42,7 +42,7 @@ def run_stage_script(stageout_dict, script_file_path=None, hold_jid=None, job_na
         script_file_path = f"{job_name}" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".sh"
 
     for source, dest in stageout_dict.items():
-        script_text = script_text + "\nrsync -rv " + str(source) + " " + str(dest)
+        script_text = script_text + "\nrsync -rv -mkpath " + str(source) + " " + str(dest)
 
     save_script(script_text, script_file_path)
     run_script(script_file_path)
