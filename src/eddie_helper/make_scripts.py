@@ -36,7 +36,7 @@ def run_stage_script(stageout_dict, script_file_path=None, hold_jid=None, job_na
     script_text=f"""#!/bin/sh
 #$ -cwd
 #$ -q staging
-#$ -l h_rt=00:29:59{hold_script}{name_script}"""
+#$ -l h_rt=00:59:59{hold_script}{name_script}"""
 
     if script_file_path is None:
         script_file_path = f"{job_name}" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".sh"
@@ -68,7 +68,7 @@ def run_stagein_script(stagein_dict, script_file_path=None, hold_jid=None, job_n
     script_text=f"""#!/bin/sh
 #$ -cwd
 #$ -q staging
-#$ -l h_rt=00:29:59{hold_script}{name_script}"""
+#$ -l h_rt=00:59:59{hold_script}{name_script}"""
 
     if script_file_path is None:
         script_file_path = f"{job_name}" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".sh"
